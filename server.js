@@ -4,35 +4,37 @@ var fs = require("fs");
 
 var bodyParser = require('body-parser');
 var multer  = require('multer');
+var upload = multer({ dest: 'uploads/' })
+
+var app = express()
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer({ dest: '/tmp/'}));
+//app.use(multer({ dest: '/tmp/'}));
 
 app.get('/index.htm', function (req, res) {
    res.sendFile( __dirname + "/" + "index.htm" );
 })
 
-app.post('/file_upload', function (req, res) {
-   console.log(req.files.file.name);
-   console.log(req.files.file.path);
-   console.log(req.files.file.type);
-   var file = __dirname + "/" + req.files.file.name;
-   
-   fs.readFile( req.files.file.path, function (err, data) {
-      fs.writeFile(file, data, function (err) {
-         if( err ){
-            console.log( err );
-            }else{
-               response = {
-                  message:'File uploaded successfully',
-                  filename:req.files.file.name
-               };
-            }
-         console.log( response );
-         res.end( JSON.stringify( response ) );
-      });
-   });
+app.post('/profile', upload.single('avatar'), function (req, res, next) {
+  // req.file is the `avatar` file 
+  // req.body will hold the text fields, if there were any 
+})
+ 
+app.post('/photos/upload', upload.array('photos', 12), function (req, res, next) {
+  // req.files is array of `photos` files 
+  // req.body will contain the text fields, if there were any 
+})
+ 
+var cpUpload = upload.fields([{ name: 'avatar', maxCount: 1 }, { name: 'gallery', maxCount: 8 }])
+app.post('/cool-profile', cpUpload, function (req, res, next) {
+  // req.files is an object (String -> Array) where fieldname is the key, and the value is array of files 
+  // 
+  // e.g. 
+  //  req.files['avatar'][0] -> File 
+  //  req.files['gallery'] -> Array 
+  // 
+  // req.body will contain the text fields, if there were any 
 })
 
 var server = app.listen(8081, function () {

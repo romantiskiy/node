@@ -1,35 +1,43 @@
-var http = require('http');
-var fs = require('fs');
-var url = require('url');
+var express = require('express');
+var app = express();
+var fs = require("fs");
 
-// Create a server
-http.createServer( function (request, response) {  
-   // Parse the request containing file name
-   var pathname = url.parse(request.url).pathname;
-   
-   // Print the name of the file for which request is made.
-   console.log("Request for " + pathname + " received.");
-   
-   // Read the requested file content from file system
-   fs.readFile(pathname.substr(1), function (err, data) {
-      if (err) {
-         console.log(err);
-         // HTTP Status: 404 : NOT FOUND
-         // Content Type: text/plain
-         response.writeHead(404, {'Content-Type': 'text/html'});
-      }else {  
-         //Page found     
-         // HTTP Status: 200 : OK
-         // Content Type: text/plain
-         response.writeHead(200, {'Content-Type': 'text/html'});  
-         
-         // Write the content of the file to response body
-         response.write(data.toString());    
-      }
-      // Send the response body 
-      response.end();
-   });   
-}).listen(8081);
+var bodyParser = require('body-parser');
+var multer  = require('multer');
 
-// Console will print the message
-console.log('Server running at http://127.0.0.1:8081/');
+app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(multer({ dest: '/tmp/'}));
+
+app.get('/index.htm', function (req, res) {
+   res.sendFile( __dirname + "/" + "index.htm" );
+})
+
+app.post('/file_upload', function (req, res) {
+   console.log(req.files.file.name);
+   console.log(req.files.file.path);
+   console.log(req.files.file.type);
+   var file = __dirname + "/" + req.files.file.name;
+   
+   fs.readFile( req.files.file.path, function (err, data) {
+      fs.writeFile(file, data, function (err) {
+         if( err ){
+            console.log( err );
+            }else{
+               response = {
+                  message:'File uploaded successfully',
+                  filename:req.files.file.name
+               };
+            }
+         console.log( response );
+         res.end( JSON.stringify( response ) );
+      });
+   });
+})
+
+var server = app.listen(8081, function () {
+   var host = server.address().address
+   var port = server.address().port
+   
+   console.log("Example app listening at http://%s:%s", host, port)
+})

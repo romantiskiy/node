@@ -17,21 +17,25 @@ app.post('/file_upload', upload.single('file'), function (req, res) {
    console.log(req.file.name);
    console.log(req.file.path);
    console.log(req.file.type);
-   var file = __dirname + "/" + req.file.name;
+
+   var file = __dirname + "/" + req.file.originalname;
+
+   console.log("writing file called: ", file);
    
    fs.readFile( req.file.path, function (err, data) {
       fs.writeFile(file, data, function (err) {
          if( err ){
-            console.log( err );
-            }else{
+            console.log("error", err );
+            } else {
                response = {
                   message:'File uploaded successfully',
-                  filename:req.file.name
+                  filename: file
                };
             }
          console.log( response );
          res.end( JSON.stringify( response ) );
       });
+
    });
 })
 
